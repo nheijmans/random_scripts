@@ -15,7 +15,7 @@ TLD/SLD;Entity
 .at;Austria
 .or.at;SLD for organizations
 .co.at;SLD for commercial enterprises
-.au; Australia
+.au;Australia
 .asn.au;SLD for associations, political parties and clubs
 .com.au;SLD for commercial use
 .net.au;SLD for registered companies
@@ -60,7 +60,7 @@ TLD/SLD;Entity
 .cd;Democratic Republic of the Congo
 .cf;Central African Republic
 .cg;Republic of the Congo
-.ch; Switzerland
+.ch;Switzerland
 .ci;C»te d'Ivoire
 .ck;Cook Islands
 .cl;Chile
@@ -271,7 +271,7 @@ TLD/SLD;Entity
 .us;United States of America
 .uy;Uruguay
 .uz;Uzbekistan
-.va; Vatican City
+.va;Vatican City
 .vc;Saint Vincent and the Grenadines
 .ve;Venezuela
 .vg;British Virgin Islands
