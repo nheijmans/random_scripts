@@ -3,7 +3,7 @@
 VirusTotal tool for easy use of the API. This script is intended to work as
 a CLI tool and to provide a Class object for tools to import. 
 
-Don't forget to change your API key at line 31 and the daily quotum of 
+Don't forget to add your API key and the daily quotum of 
 the public API key when automating searches:
 --------------------------------------------
 | Request rate  | 4      | requests/minute |
