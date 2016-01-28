@@ -12,11 +12,6 @@ the public API key when automating searches:
 --------------------------------------------
 | Monthly quota | 178560 | requests/month  |
 --------------------------------------------
-
-Todo:
-    * Add support to comment
-    * Add support for domain
-    * Add support for ip
 """
 import requests
 import argparse
