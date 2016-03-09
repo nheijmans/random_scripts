@@ -327,7 +327,7 @@ N/A,application/andrew-inset,Andrew Toolkit
 .es3,application/vnd.eszigno3+xml,MICROSEC e-Szign¢
 .mdb,application/x-msaccess,Microsoft Access
 .asf,video/x-ms-asf,Microsoft Advanced Systems Format (ASF)
-.exe,application/x-msdownload,Microsoft Application
+.exe,application/x-dosexec,Microsoft Application
 .cil,application/vnd.ms-artgalry,Microsoft Artgalry
 .cab,application/vnd.ms-cab-compressed,Microsoft Cabinet File
 .ims,application/vnd.ms-ims,Microsoft Class Server
