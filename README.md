@@ -3,7 +3,7 @@ A repository for all scripts not part of a project, but could be handy for other
 
 script | description | link
 --- | --- | ---
-VirusTotal/ | todo | https://www.virustotal.com
-MalwareConfig/ | todo | http://malwareconfig.com
+VirusTotal/ | VT related scripts | https://www.virustotal.com
+MalwareConfig/ | API script for MalwareConfig  | http://malwareconfig.com
 uastring.py | get user-agent information | http://www.useragentstring.com
 
