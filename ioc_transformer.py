@@ -19,7 +19,11 @@ def encoder(ioc):
         for n,i in enumerate(listed):
             if i in chars:    
                 listed[n] = '['+i+']'
+        if ioc[0:4] == 'http':
+            listed[1] = 'x'
+            listed[2] = 'x'
         converted = "".join(listed)
+
     return converted
 
 def decoder(ioc):
@@ -35,6 +39,10 @@ def decoder(ioc):
         for n,i in enumerate(listed):
             if i in chars:    
                 listed.pop(n)
+
+        if ioc[0:4] == 'hxxp':
+            listed[1] = 't'
+            listed[2] = 't'
         converted = "".join(listed)
     return converted
 
