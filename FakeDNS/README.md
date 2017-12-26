@@ -8,6 +8,7 @@ A minimal python DNS server that replies with a configurable IP in an A record
 
 ## Changes made
 Renamed variables to English for easier understanding the code. That's it :)
+It does makes it easier to modify/read and planned to add some proper logging + argument handling
 
 ## Examples
 ```
