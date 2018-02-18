@@ -2,7 +2,7 @@
 
 import boto3
 
-def main():
+def list_ec2():
     profile = 'yourprofilename'
     session = boto3.session.Session(profile_name=profile)
     client = session.client('ec2', region_name='us-east-1')
@@ -16,4 +16,4 @@ def main():
                 print (instance.id, instance.public_ip_address, instance.instance_type, region)
     return
 
-main()
+list_ec2()
