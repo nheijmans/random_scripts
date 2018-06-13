@@ -1,5 +1,8 @@
-def get_temp_keys(acc):
-    assume_acc  = "the_other_acc_to_assume_role (arn)"
+#!/usr/bin/python
+
+#assume_acc  = "the_other_acc_to_assume_role (arn)"
+
+def get_temp_keys(assume_acc):
     assume_role = "the_role_to_assume (name)"
     rootacc="arn:aws:iam::{0}/{1}".format(assume_acc, assume_role)
     stsclient = boto3.client('sts')
