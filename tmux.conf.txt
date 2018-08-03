@@ -1,0 +1,13 @@
+set -g status-keys vi
+setw -g mode-keys vi
+
+set-option -g prefix C-b
+bind-key C-b last-window
+
+bind s split-window -v
+bind v split-window -h
+
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
