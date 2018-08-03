@@ -10,3 +10,5 @@ virustotal/ | VT related scripts | https://www.virustotal.com
 uastring.py | get user-agent information | http://www.useragentstring.com
 time_conversions.py | convert epoch to local or utc timestamp and back | -
 ioc_transformer.py  | adds or removes brackets from ioc's to share/received and converts http to hxxp (or back). can also read from file | -
+vim configuration  | vim configuration file to replace tabs with spaces (useful for Python), auto indention and syntax highlighting among other things| -
+tmux configuration  | tmux configuration file to set VI control settings (ctrl+j to move down for eample) and ctrl+b to move between panes | -
