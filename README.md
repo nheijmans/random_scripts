@@ -6,6 +6,7 @@ script | description | link
 aws/ | Scripts to manage and analyze AWS services | -
 fakedns/ | Small changes to the mini fake DNS server created by Francisco Santos | http://code.activestate.com/recipes/491264-mini-fake-dns-server/
 malwareconfig/ | API script for MalwareConfig  | http://malwareconfig.com
+mock_http_server/ | Python2.7 and Python3.6 scripts to launch temporary HTTP(S) servers for all kind of purposes
 virustotal/ | VT related scripts | https://www.virustotal.com
 uastring.py | get user-agent information | http://www.useragentstring.com
 time_conversions.py | convert epoch to local or utc timestamp and back | -
