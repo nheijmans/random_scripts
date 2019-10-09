@@ -1,7 +1,10 @@
 syntax on
 filetype indent plugin on
+set number
 set tabstop=8
 set expandtab
 set shiftwidth=4
 set softtabstop=4
 set background=dark
+
+utocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
