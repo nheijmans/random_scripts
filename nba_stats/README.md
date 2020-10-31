@@ -13,7 +13,7 @@ python3 -m venv .env
 ./.env/bin/activate
 
 # Install requirements
-pip3 install requirements
+pip3 install requirements.txt
 ```
 
 Create the folder 'logs' and run the script
