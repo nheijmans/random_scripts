@@ -1,5 +1,5 @@
 ## Introduction
-This repository contains scripts to collect basketball statistics from [Basketball Reference](https://basketball-reference.com) or [MySportsFeed](https://mysportsfeed.com). Th intent of this work was to provide an automated way this data for Fantasy Basketball competition.
+This repository contains scripts to collect basketball statistics from [Basketball Reference](https://basketball-reference.com) or [MySportsFeed](https://mysportsfeed.com). Th intent of this work was to provide an automated way to pull this data for Fantasy Basketball competition.
 
 To make it more easily accessible, the Basketball Reference script (which I use more) a Docker image is created. The script has been branded Basketball Statistics Collector, or BSC. 
 
