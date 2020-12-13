@@ -1,0 +1,123 @@
+<form>
+  <label>Current Week Analysis</label>
+  <description></description>
+  <label>Current Week Analysis</label>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="multiselect" token="player_token">
+      <label>My Team</label>
+      <delimiter> OR </delimiter>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <valuePrefix>player="</valuePrefix>
+      <valueSuffix>*"</valueSuffix>
+    </input>
+    <input type="multiselect" token="player_token2">
+      <label>Opponent</label>
+      <valuePrefix>player="</valuePrefix>
+      <valueSuffix>*"</valueSuffix>
+      <delimiter> OR </delimiter>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="text" token="week_start">
+      <label>Week Start</label>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Current Week Production</title>
+      <table>
+        <title>My Team</title>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*" earliest=$week_start$:00:00:00 
+| eval player = FirstName + " " + LastName
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition"
+|search $player_token$
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time
+| stats avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(trb) as trb sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov by player 
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts
+| appendpipe [ stats sum(trb) as trb avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov | eval player = "Total" ]
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <drilldown>
+          <set token="PlayerToken">$row.player$</set>
+        </drilldown>
+      </table>
+    </panel>
+    <panel>
+      <title>Current Team Production</title>
+      <table>
+        <title>Opponent</title>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*" earliest=$week_start$:00:00:00 
+| eval player = FirstName + " " + LastName
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition"
+|search $player_token2$
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time
+| stats avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(trb) as trb sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov by player 
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts
+| appendpipe [ stats sum(trb) as trb avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov | eval player = "Total" ]
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <drilldown>
+          <set token="PlayerToken">$row.player$</set>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*" earliest=$week_start$:00:00:00 
+| eval player = FirstName + " " + LastName 
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition" 
+| search player="$PlayerToken$" 
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time 
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts 
+| append 
+    [ search index=nba-stats $PlayerToken$ 
+    | rename 2p as p2 3p as p3 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | eval player = "season average"
+    | stats  first(fg_pct) as fg_pct first(ft_pct) as ft_pct first(p3) as p3 first(trb) as trb first(ast) as ast first(stl) as stl first(blk) as blk first(tov) as tov first(pts) as pts by player
+    | eval fg_pct=fg_pct*100, ft_pct=ft_pct*100]</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

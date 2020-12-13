@@ -1,0 +1,227 @@
+<form>
+  <label>Top Players Per Category</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="number_token">
+      <label>Number of top players</label>
+      <choice value="10">Top10</choice>
+      <choice value="15">Top15</choice>
+      <choice value="20">Top20</choice>
+      <choice value="25">Top25</choice>
+      <initialValue>10</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>FG %</title>
+      <table>
+        <search>
+          <query>index=nba-stats
+| stats sparkline(avg(fg_pct),1d) as "avg over time" first(fg_pct) as fg_pct first(g) as g first(mp) as mp first(fga) as fga by player
+| search mp &gt; 20 g &gt; 10 fga &gt; 3
+| sort - fg_pct
+| head $number_token$
+| fields - g mp</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>FT %</title>
+      <table>
+        <search>
+          <query>index=nba-stats
+| stats sparkline(avg(ft_pct),1d) as "avg over time" first(ft_pct) as ft_pct first(g) as g first(mp) as mp first(fga) as fga first(fta) as fta by player
+| search mp &gt; 20 g &gt; 10 fta &gt; 1 
+| sort - ft_pct
+| head $number_token$
+| fields - g mp fga</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Points</title>
+      <table>
+        <search>
+          <query>index=nba-stats 
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats sparkline(avg(pts),1d) as "avg over time" first(pts) as pts by player
+| sort - pts
+| head $number_token$</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Blocks</title>
+      <table>
+        <search>
+          <query>index=nba-stats  
+| stats sparkline(avg(blk),1d) as "avg over time" first(blk) as blk by player
+| sort - blk
+| head $number_token$</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Rebounds</title>
+      <table>
+        <search>
+          <query>index=nba-stats 
+| stats sparkline(avg(trb),1d) as "avg over time" first(trb) as trb by player
+| sort - trb
+| head $number_token$</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Steals</title>
+      <table>
+        <search>
+          <query>index=nba-stats 
+| stats sparkline(avg(stl),1d) as "avg over time" first(stl) as stl by player
+| sort - stl
+| head $number_token$</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Assists</title>
+      <table>
+        <search>
+          <query>index=nba-stats 
+| stats sparkline(avg(ast),1d) as "avg over time" first(ast) as ast by player
+| sort - ast
+| head $number_token$</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Three Pointers</title>
+      <table>
+        <search>
+          <query>index=nba-stats  
+| rename 2p as p2 3p as p3 tm as team
+| stats sparkline(avg(p3),1d) as "avg over time" first(p3) as p3 by player
+| sort - p3
+| head $number_token$</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Turn Overs</title>
+      <table>
+        <search>
+          <query>index=nba-stats
+| stats sparkline(max(tov),1d) as timeline first(tov) as tov first(g) as g first(mp) as mp by player
+| search mp &gt; 20 g &gt; 12
+| sort tov
+| head $number_token$
+| fields - g mp</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

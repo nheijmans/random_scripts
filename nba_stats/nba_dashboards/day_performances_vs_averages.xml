@@ -1,0 +1,222 @@
+<form>
+  <label>Day Performances vs. Averages</label>
+  <fieldset submitButton="true">
+    <input type="dropdown" token="stat_group">
+      <label>statistic</label>
+      <choice value="*">All</choice>
+      <fieldForLabel>column</fieldForLabel>
+      <fieldForValue>column</fieldForValue>
+      <search>
+        <query>index=nba-stats 
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp 
+| rename 2p as p2 3p as p3 tm as team 
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov first(mp) as mp
+| transpose</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="time" token="field1">
+      <label></label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="player_token">
+      <label>Player</label>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>All players</title>
+      <chart>
+        <title>Last game</title>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*" 
+| eval player = FirstName + " " + LastName, mp=MinSeconds/60 
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition" 
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time 
+| stats avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(trb) as trb sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov avg(mp) as mp c as games_played by player 
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2) 
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts mp games_played
+| join player 
+    [ search index=nba-stats source="*nba_daily_stats*" 
+    | rename 2p as p2 3p as p3 tm as team 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | stats first(ft_pct) as avg_ft_pct first(fg_pct) as avg_fg_pct first(pts) as avg_pts first(trb) as avg_trb first(ast) as avg_ast first(p3) as avg_p3 first(stl) as avg_stl first(blk) as avg_blk first(tov) as avg_tov first(mp) as avg_mp first(team) as team by player] 
+| eval pts_perf = pts-avg_pts, trb_perf=trb-avg_trb, ast_perf=ast-avg_ast, stl_perf=stl-avg_stl, blk_perf=blk-avg_blk, tov_perf=tov-avg_tov, p3_perf=p3-avg_p3, mp_perf=mp-avg_mp
+| table player, $stat_group$_perf games_played
+| sort - $stat_group$_perf</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.overlayFields">games_played</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">493</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">0</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Player Over/Under Performance</title>
+      <chart>
+        <title>Over the last days</title>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*" 
+| eval player = FirstName + " " + LastName, mp=MinSeconds/60 
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition" 
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time 
+| stats avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(trb) as trb sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov avg(mp) as mp c as games_played by player 
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2) 
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts mp games_played
+| join player 
+    [ search index=nba-stats source="*nba_daily_stats*" 
+    | rename 2p as p2 3p as p3 tm as team 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | stats first(ft_pct) as avg_ft_pct first(fg_pct) as avg_fg_pct first(pts) as avg_pts first(trb) as avg_trb first(ast) as avg_ast first(p3) as avg_p3 first(stl) as avg_stl first(blk) as avg_blk first(tov) as avg_tov first(mp) as avg_mp first(team) as team by player] 
+| eval pts_perf = (pts-avg_pts)/games_played, trb_perf=(trb-avg_trb)/games_played, ast_perf=(ast-avg_ast)/games_played, stl_perf=(stl-avg_stl)/games_played, blk_perf=(blk-avg_blk)/games_played, tov_perf=(tov-avg_tov)/games_played, p3_perf=(p3-avg_p3)/games_played, mp_perf=(mp-avg_mp)/games_played
+| table player, $stat_group$_perf games_played
+| sort - $stat_group$_perf</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="height">416</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Player specific performance</title>
+      <chart>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*" 
+| eval player = FirstName + " " + LastName, mp=MinSeconds/60 
+| search player="*$player_token$*"
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition"   
+| timechart span=1d avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(trb) as trb sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov avg(mp) as mp c as games_played values(player) as player
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2) 
+| join player 
+    [ search index=nba-stats source="*nba_daily_stats*" 
+    | rename 2p as p2 3p as p3 tm as team 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | stats first(ft_pct) as avg_ft_pct first(fg_pct) as avg_fg_pct first(pts) as avg_pts first(trb) as avg_trb first(ast) as avg_ast first(p3) as avg_p3 first(stl) as avg_stl first(blk) as avg_blk first(tov) as avg_tov first(mp) as avg_mp first(team) as team by player] 
+| eval pts_perf = pts-avg_pts, trb_perf=trb-avg_trb, ast_perf=ast-avg_ast, stl_perf=stl-avg_stl, blk_perf=blk-avg_blk, tov_perf=tov-avg_tov, p3_perf=p3-avg_p3, mp_perf=mp-avg_mp
+| table _time avg_$stat_group$ $stat_group$</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.overlayFields">avg_ast,avg_blk,avg_fg_pct,avg_mp,avg_ft_pct,avg_stl,avg_p3,avg_pts,avg_trb,avg_tov</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">454</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*" 
+| eval player = FirstName + " " + LastName, mp=MinSeconds/60 
+| search player="*$player_token$*"
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition"   
+| timechart span=1d avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct sum(pts) as pts sum(trb) as trb sum(ast) as ast sum(p3) as p3 sum(stl) as stl sum(blk) as blk sum(tov) as tov avg(mp) as mp c as games_played values(player) as player
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2) 
+| join player 
+    [ search index=nba-stats source="*nba_daily_stats*" 
+    | rename 2p as p2 3p as p3 tm as team 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | stats first(ft_pct) as avg_ft_pct first(fg_pct) as avg_fg_pct first(pts) as avg_pts first(trb) as avg_trb first(ast) as avg_ast first(p3) as avg_p3 first(stl) as avg_stl first(blk) as avg_blk first(tov) as avg_tov first(mp) as avg_mp first(team) as team by player] 
+| eval mp_perf = mp, pts_perf = pts-avg_pts, trb_perf=trb-avg_trb, ast_perf=ast-avg_ast, stl_perf=stl-avg_stl, blk_perf=blk-avg_blk, tov_perf=tov-avg_tov, p3_perf=p3-avg_p3, mp_perf=mp-avg_mp
+| table _time avg_* *_perf</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsY.majorUnit">1</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.overlayFields">avg_ast,avg_blk,avg_ft_pct,avg_fg_pct,avg_pts,avg_stl,avg_p3,avg_trb,avg_tov,avg_mp</option>
+        <option name="charting.drilldown">none</option>
+        <option name="height">455</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+</form>

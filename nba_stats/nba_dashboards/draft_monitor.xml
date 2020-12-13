@@ -1,0 +1,259 @@
+<form>
+  <label>DRAFT Monitor</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="multiselect" token="player_token" searchWhenChanged="true">
+      <label>Already Drafted</label>
+      <prefix>player=</prefix>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter> OR </delimiter>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <initialValue>Zaza Pachulia</initialValue>
+    </input>
+    <input type="multiselect" token="drafted_player" searchWhenChanged="true">
+      <label>Drafted By Me</label>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter> OR </delimiter>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>My Drafted Team</title>
+      <table>
+        <search>
+          <query>index=nba-stats $drafted_player$
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov first(team) as team by player 
+| appendpipe [ stats avg(trb) as trb avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct avg(pts) as pts avg(ast) as ast avg(p3) as p3 avg(stl) as stl avg(blk) as blk avg(tov) as tov | eval player = "Averages overall" ]
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player team fg_pct ft_pct p3 trb ast stl blk tov pts</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <search>
+          <query>|makeresults
+|eval txt="Available top players per category"</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">50</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>FG %</title>
+      <table>
+        <search>
+          <query>index=nba-stats NOT($player_token$)
+| stats first(fg_pct) as fg_pct first(g) as g first(mp) as mp first(fga) as fga by player
+| search mp &gt; 20 g &gt; 10 fga &gt; 3
+| sort - fg_pct
+| head 10
+| fields - g mp</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>FT %</title>
+      <table>
+        <search>
+          <query>index=nba-stats NOT($player_token$)
+| stats first(ft_pct) as ft_pct first(g) as g first(mp) as mp first(fga) as fga first(fta) as fta by player
+| search mp &gt; 20 g &gt; 10 fta &gt; 1 
+| sort - ft_pct
+| head 10
+| fields - g mp fga</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Three Pointers</title>
+      <table>
+        <search>
+          <query>index=nba-stats   NOT($player_token$)
+| rename 2p as p2 3p as p3 tm as team
+| stats first(p3) as p3 by player
+| sort - p3
+| head 10</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Assists</title>
+      <table>
+        <search>
+          <query>index=nba-stats  NOT($player_token$)
+| stats first(ast) as ast by player
+| sort - ast
+| head 10</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Rebounds</title>
+      <table>
+        <search>
+          <query>index=nba-stats  NOT($player_token$)
+| stats first(trb) as trb by player
+| sort - trb
+| head 10</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Steals</title>
+      <table>
+        <search>
+          <query>index=nba-stats  NOT($player_token$)
+| stats first(stl) as stl by player
+| sort - stl
+| head 10</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Blocks</title>
+      <table>
+        <search>
+          <query>index=nba-stats  NOT($player_token$) 
+| stats first(blk) as blk by player
+| sort - blk
+| head 10</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Points</title>
+      <table>
+        <search>
+          <query>index=nba-stats  NOT($player_token$)
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats first(pts) as pts by player
+| sort - pts
+| head 10</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

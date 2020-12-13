@@ -1,0 +1,55 @@
+<form>
+  <label>Player Grouping By Statistics</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="stat_group">
+      <label>Statistic</label>
+      <fieldForLabel>column</fieldForLabel>
+      <fieldForValue>column</fieldForValue>
+      <search>
+        <query>index=nba-stats 
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp 
+| rename 2p as p2 3p as p3 tm as team 
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov
+| transpose</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="text" token="min_prod">
+      <label>Minimum production</label>
+    </input>
+    <input type="text" token="max_prod">
+      <label>Maximum production</label>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>index=nba-stats $stat_group$ &gt;= $min_prod$ $stat_group$ &lt;= $max_prod$
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp 
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| eval stat = $stat_group$
+| eval $stat_group$ = round($stat_group$,0)
+| stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov first(pos) as pos first(stat) as stat by player team
+| eval $stat_group$_grp=substr($stat_group$,1,5) 
+| stats values(player) as players list(stat) as "details" list(pos) as position dc(player) as players_c by $stat_group$_grp
+| sort - $stat_group$_grp details</query>
+          <earliest>-14d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

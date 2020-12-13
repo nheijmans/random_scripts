@@ -1,0 +1,239 @@
+<form>
+  <label>Calculate Team Stats</label>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="multiselect" token="player_token">
+      <label>My Team</label>
+      <delimiter> OR </delimiter>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+    </input>
+    <input type="multiselect" token="player_token2">
+      <label>Opponent</label>
+      <valuePrefix>"</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter> OR </delimiter>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="text" token="week_start">
+      <label>Week Start</label>
+    </input>
+    <input type="text" token="week_end">
+      <label>Week End</label>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Potential Calculation</title>
+      <table>
+        <title>My Team vs. Opponent</title>
+        <search>
+          <query>index=nba-stats $player_token$
+| rename 2p as p2 3p as p3 tm as team 
+| lookup nba_schedule.csv home as team OUTPUT date as game_home 
+| lookup nba_schedule.csv away as team OUTPUT date as game_away 
+| eval games=mvappend(game_home,game_away) 
+| eval game_time = games 
+| convert timeformat="%d/%m/%Y %H:%M" mktime("games") 
+| eval game_time_conv = strftime(games, "%d/%m/%Y") 
+| stats values(player) as player by games 
+| stats count by player games 
+| eval start_week = "$week_start$", end_week = "$week_end$" 
+| convert timeformat="%d/%m/%Y" mktime("start_week") 
+| convert timeformat="%d/%m/%Y" mktime("end_week") 
+| where games &gt;= start_week AND games &lt; end_week 
+| xyseries player games count 
+| addtotals fieldname="games" 
+| fields player games 
+| join player 
+    [ search index=nba-stats 
+    | fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time 
+    | rename 2p as p2 3p as p3 tm as team 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov first(team) as team by player
+    | eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+    ]
+| eval ast_prd = ast*games, blk_prd = blk*games, p3_prd = p3*games, pts_prd = pts*games, stl_prd = stl*games, tov_prd = tov*games, trb_prd = trb*games, fg_pct_prd = fg_pct, ft_pct_prd = ft_pct
+| fields player *_prd
+| addcoltotals labelfield=player label="Totals" 
+| where player="Totals"
+| fields - player
+| rename *_prd as *
+| eval team = "My Team"
+| table team fg_pct ft_pct p3 trb ast stl blk tov pts
+| eval fg_pct=round(fg_pct/13,2), ft_pct=round(ft_pct/13,2)
+| append [search index=nba-stats $player_token2$
+| rename 2p as p2 3p as p3 tm as team 
+| lookup nba_schedule.csv home as team OUTPUT date as game_home 
+| lookup nba_schedule.csv away as team OUTPUT date as game_away 
+| eval games=mvappend(game_home,game_away) 
+| eval game_time = games 
+| convert timeformat="%d/%m/%Y %H:%M" mktime("games") 
+| eval game_time_conv = strftime(games, "%d/%m/%Y") 
+| stats values(player) as player by games 
+| stats count by player games 
+| eval start_week = "$week_start$", end_week = "$week_end$" 
+| convert timeformat="%d/%m/%Y" mktime("start_week") 
+| convert timeformat="%d/%m/%Y" mktime("end_week") 
+| where games &gt;= start_week AND games &lt; end_week 
+| xyseries player games count 
+| addtotals fieldname="games" 
+| fields player games 
+| join player 
+    [ search index=nba-stats 
+    | fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time 
+    | rename 2p as p2 3p as p3 tm as team 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov first(team) as team by player 
+    | eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+    ]
+| eval ast_prd = ast*games, blk_prd = blk*games, p3_prd = p3*games, pts_prd = pts*games, stl_prd = stl*games, tov_prd = tov*games, trb_prd = trb*games, fg_pct_prd = fg_pct, ft_pct_prd = ft_pct
+| fields player *_prd
+| addcoltotals labelfield=player label="Totals" 
+| where player="Totals"
+| rename *_prd as *
+| fields - player
+| eval team = "Opponent"
+| table team fg_pct ft_pct p3 trb ast stl blk tov pts
+| eval fg_pct=round(fg_pct/13,2), ft_pct=round(ft_pct/13,2)
+]</query>
+          <earliest>-7d@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Team Stats</title>
+      <table>
+        <title>My Team</title>
+        <search>
+          <query>index=nba-stats $player_token$
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov first(team) as team by player 
+| appendpipe [ stats avg(trb) as trb avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct avg(pts) as pts avg(ast) as ast avg(p3) as p3 avg(stl) as stl avg(blk) as blk avg(tov) as tov | eval player = "Averages overall" ]
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player team fg_pct ft_pct p3 trb ast stl blk tov pts</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Team Stats</title>
+      <table>
+        <title>Opponent</title>
+        <search>
+          <query>index=nba-stats $player_token2$
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov by player 
+| appendpipe [ stats avg(trb) as trb avg(ft_pct) as ft_pct avg(fg_pct) as fg_pct avg(pts) as pts avg(ast) as ast avg(p3) as p3 avg(stl) as stl avg(blk) as blk avg(tov) as tov | eval player = "Averages overall" ]
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">50</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Player schedule</title>
+      <table>
+        <title>My Team</title>
+        <search>
+          <query>index=nba-stats $player_token$
+| rename 2p as p2 3p as p3 tm as team
+| lookup nba_schedule.csv home as team OUTPUT  date as game_home
+| lookup nba_schedule.csv away as team OUTPUT date as game_away
+| eval games=mvappend(game_home,game_away)
+| eval game_time = games
+| convert timeformat="%d/%m/%Y %H:%M" mktime("games")
+| eval game_time_conv = strftime(games, "%d/%m/%Y")
+| stats values(player) as player by games
+| stats count by player games
+| eval start_week = "$week_start$", end_week = "$week_end$"
+| convert timeformat="%d/%m/%Y" mktime("start_week")
+| convert timeformat="%d/%m/%Y" mktime("end_week")
+| where games &gt;= start_week AND games &lt; end_week
+| sort games
+| eval games = strftime(games, "%Y/%m/%d")
+| xyseries player games count
+| addcoltotals labelfield=player label="Total players"
+| addtotals fieldname="Total"</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Player schedule</title>
+      <table>
+        <title>Opponent</title>
+        <search>
+          <query>index=nba-stats $player_token2$
+| rename 2p as p2 3p as p3 tm as team
+| lookup nba_schedule.csv home as team OUTPUT  date as game_home
+| lookup nba_schedule.csv away as team OUTPUT date as game_away
+| eval games=mvappend(game_home,game_away)
+| eval game_time = games
+| convert timeformat="%d/%m/%Y %H:%M" mktime("games")
+| eval game_time_conv = strftime(games, "%d/%m/%Y")
+| stats values(player) as player by games
+| stats count by player games
+| eval start_week = "$week_start$", end_week = "$week_end$"
+| convert timeformat="%d/%m/%Y" mktime("start_week")
+| convert timeformat="%d/%m/%Y" mktime("end_week")
+| where games &gt;= start_week AND games &lt; end_week
+| sort games
+| eval games = strftime(games, "%Y/%m/%d")
+| xyseries player games count
+| addcoltotals labelfield=player label="Total players"
+| addtotals fieldname="Total"</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

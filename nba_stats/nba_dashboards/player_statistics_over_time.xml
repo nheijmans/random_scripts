@@ -1,0 +1,174 @@
+<form>
+  <label>Compare Player Statistics</label>
+  <fieldset submitButton="true">
+    <input type="time" token="field1">
+      <label>Timerange</label>
+      <default>
+        <earliest>1544360400</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="multiselect" token="player_token">
+      <label>Player(s)</label>
+      <fieldForLabel>player</fieldForLabel>
+      <fieldForValue>player</fieldForValue>
+      <search>
+        <query>index=nba-stats
+| stats count by player
+| fields + player</query>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </search>
+      <valuePrefix>player="</valuePrefix>
+      <valueSuffix>"</valueSuffix>
+      <delimiter> OR </delimiter>
+    </input>
+    <input type="text" token="date_token">
+      <label>Maximum Date</label>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Player Comparison</title>
+      <table>
+        <title>Full Season Averages</title>
+        <search>
+          <query>index=nba-stats $player_token$
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov by player
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2)
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts
+| transpose column_name=statistics header_field=player</query>
+          <earliest>-14d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">50</option>
+        <option name="dataOverlayMode">heatmap</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Latest game statistics</title>
+        <search>
+          <query>index="nba-stats" source="*daily_game_stats*" 
+| eval player = FirstName + " " + LastName
+| search $player_token$
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition"
+| table game_time competition team player fg_pct ft_pct p3 trb ast stl blk tov pts
+| sort - player</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Last 15, 30 days &amp; season average</title>
+      <table>
+        <title>Averages</title>
+        <search>
+          <query>index=nba-stats source="*daily_game_stats*"
+| eval player = FirstName + " " + LastName
+| search $player_token$
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition"
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts
+| stats avg(fg_pct) as fg_pct avg(ft_pct) as ft_pct avg(p3) as p3 avg(trb) as trb avg(ast) as ast avg(stl) as stl avg(blk) as blk avg(tov) as tov avg(pts) as pts by player
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2), days=15
+| append [search index=nba-stats source="*daily_game_stats*" earliest=-30d@d
+| eval player = FirstName + " " + LastName
+| search $player_token$
+| rename FgPct as fg_pct FtPct as ft_pct Reb as trb Ast as ast Blk as blk Stl as stl Tov as tov Pts as pts Fg3PtMade as p3 "Game Date" as game_time "Team Abbr" as team "Game Teams" as "competition"
+| table player fg_pct ft_pct p3 trb ast stl blk tov pts
+| stats avg(fg_pct) as fg_pct avg(ft_pct) as ft_pct avg(p3) as p3 avg(trb) as trb avg(ast) as ast avg(stl) as stl avg(blk) as blk avg(tov) as tov avg(pts) as pts by player
+| eval ft_pct=round(ft_pct,2), fg_pct=round(fg_pct,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2), days=30
+]
+| append 
+    [ search index=nba-stats $player_token$ source="*nba_*"
+    | fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw _time 
+    | rename 2p as p2 3p as p3 tm as team 
+    | eval pts = round((p2*2)+(p3*3)+ft,2) 
+    | stats first(ft_pct) as ft_pct first(fg_pct) as fg_pct first(pts) as pts first(trb) as trb first(ast) as ast first(p3) as p3 first(stl) as stl first(blk) as blk first(tov) as tov by player 
+    | eval ft_pct=round(ft_pct*100,2), fg_pct=round(fg_pct*100,2), pts=round(pts,2), trb=round(trb,2), ast=round(ast,2), p3=round(p3,2), stl=round(stl,2), blk=round(blk,2), tov=round(tov,2), days="season average"
+    | table player fg_pct ft_pct p3 trb ast stl blk tov pts days
+    ]
+| sort - player days</query>
+          <earliest>-15d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Player schedule</title>
+      <table>
+        <search>
+          <query>index=nba-stats $player_token$
+| rename 2p as p2 3p as p3 tm as team
+| lookup nba_schedule.csv home as team OUTPUT  date as game_home
+| lookup nba_schedule.csv away as team OUTPUT date as game_away
+| eval games=mvappend(game_home,game_away)
+| eval game_time = games
+| convert timeformat="%d/%m/%Y %H:%M" mktime("games")
+| eval game_time_conv = strftime(games, "%d/%m/%Y")
+| stats values(player) as player by games
+| stats count by player games
+| eval date_range = "$date_token$"
+| convert timeformat="%d/%m/%Y" mktime("date_range")
+| where games &lt;= date_range and games &gt;= now()
+| sort games
+| eval games = strftime(games, "%Y/%m/%d")
+| xyseries player games count
+| addtotals fieldname="Total"</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">highlow</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Statistics over time</title>
+      <chart>
+        <search>
+          <query>index=nba-stats $player_token$ 
+| fields - host index linecount punct sourcetype splunk_server splunk_server_group timestamp _raw 
+| rename 2p as p2 3p as p3 tm as team
+| eval pts = round((p2*2)+(p3*3)+ft,2)
+| timechart useother=f span=1d  last(ast) as ast last(blk) as blk last(pts) as pts last(fg_pct) as fg_pct last(ft_pct) as ft_pct last(tov) as tov last(stl) as stl last(trb) as trb last(p3) as p3 last(mp) as mp by player</query>
+          <earliest>1540080000</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">collapsed</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">1</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="height">751</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">0</option>
+        <option name="trellis.size">medium</option>
+        <option name="trellis.splitBy">_aggregation</option>
+      </chart>
+    </panel>
+  </row>
+</form>
